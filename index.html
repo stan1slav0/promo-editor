@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Promo copy formatter</title>
+    <link rel="icon" type="image/x-icon" href="image/favicon.ico">
+    <!-- Fonts
+          ================================================== -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Wix+Madefor+Display:wght@400..800&display=swap" rel="stylesheet">
+    <!-- CSS
+      ================================================== -->
+    <link href="css/style.css" rel="stylesheet" type="text/css" />
+    <link href="css/mediaqueries.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div class="main-wrapper">
+    <div class="limit">
+        <div class="primary-text-editor-wrapper">
+            <h2 class="main-headline">Редактор тексту &#128221;:</h2>
+            <div class="primary-text-editor-bg">
+                <div class="primary-text-editor-block" id="editor" contenteditable="true">
+                </div>
+            </div>
+        </div>
+        <div class="main-input-number-block">
+            <!-- Поле для введення номера файлу -->
+            <div class="input-name-block">
+                <label class="input-name-label" for="fileName">Введіть імʼя файлу:</label>
+                <button class="button-decrement" onclick="changeNumber(-1)">&#11015;</button>
+                <input class="input-name" type="text" id="fileName" value="" autocomplete="off">
+                <button class="button-increment" onclick="changeNumber(1)">&#11014;</button>
+                <div class="name-check-wrapper">
+                    <input id="approveNeeded" type="checkbox" checked class="name-checkbox">
+                </div>
+            </div>
+        </div>
+
+        <div class="code-blocks-wrapper">
+            <div class="code-block">
+                <div class="code-buttons-wrapper">
+                    <button class="primary-button" onclick="exportHTML()">Експортувати HTML</button>
+                    <button class="primary-button" id="downloadBtn">Завантажити HTML</button>
+
+
+                    <div class="copy-block">
+                        <button class="primary-button" id="copyHtmlButton" onclick="copyTextHtml()">Copy HTML</button>
+                    </div>
+                </div>
+                <div class="code-inner-block">
+                    <h2 class="main-headline">HTML результат:</h2>
+                    <textarea class="html-code-block" id="output" contenteditable="true"></textarea>
+                </div>
+            </div>
+            <div class="code-block">
+                <div class="code-buttons-wrapper">
+                    <button class="primary-button" onclick="exportMJML()">Експортувати MJML</button>
+                    <button class="primary-button" id="mjmlDownloadBtn">Завантажити MJML</button>
+                    <!-- Поле для введення номера файлу -->
+                   <!-- <div class="input-name-block">
+                        <label class="input-name-label" for="mjmlFileName">Введіть імʼя файлу:</label>
+                        <button class="button-decrement" onclick="changeMjmlNumber(-1)">&#11015;</button>
+                        <input class="input-name" type="text" id="mjmlFileName" value="" autocomplete="off">
+                        <button class="button-increment" onclick="changeMjmlNumber(1)">&#11014;</button>
+                    </div>-->
+                    <div class="copy-block">
+                        <button id="copyMjmlButton" class="primary-button" onclick="copyTextMjml()">Copy MJML</button>
+                    </div>
+                </div>
+                <div class="code-inner-block">
+                    <h2 class="main-headline">MJML результат:</h2>
+                    <textarea class="html-code-block" id="mjmlOutput" contenteditable="true"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+<script src="js/main.js"></script>
+
+</body>
+</html>
