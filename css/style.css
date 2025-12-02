@@ -36,48 +36,62 @@ body {
   10% {
     background-position: 33% 0, 0 33%;
   }
+
   20% {
     background-position: 66% 0, 0 66%;
   }
+
   30% {
     background-position: 99% 0, 0 99%;
   }
+
   40% {
     background-position: 100% 33%, 33% 100%;
   }
+
   50% {
     background-position: 100% 66%, 66% 100%;
   }
+
   60% {
     background-position: 100% 100%, 100% 100%;
   }
+
   70% {
     background-position: 66% 100%, 100% 66%;
   }
+
   80% {
     background-position: 33% 100%, 100% 33%;
   }
+
   80% {
     background-position: 0 100%, 100% 0;
   }
+
   90% {
     background-position: 66% 75%, 50% 50%;
   }
+
   100% {
     background-position: 0 0, 100% 100%;
   }
 }
+
 .main-wrapper {
   background: url("../image/bubbles-2.png") left top repeat;
 }
+
 .main-wrapper ::-webkit-scrollbar {
   width: 10px;
 }
+
 .main-wrapper ::-webkit-scrollbar-track {
   background-color: #E1F0FF;
   -webkit-border-radius: 10px;
   border-radius: 10px;
 }
+
 .main-wrapper ::-webkit-scrollbar-thumb {
   -webkit-border-radius: 10px;
   border-radius: 10px;
@@ -88,6 +102,7 @@ body {
   display: flex;
   justify-content: space-between;
 }
+
 .code-blocks-wrapper .code-block {
   width: calc(50% - 30px);
 }
@@ -99,7 +114,8 @@ body {
   flex-wrap: wrap;
 }
 
-.html-code-block, .primary-text-editor-block {
+.html-code-block,
+.primary-text-editor-block {
   width: 100%;
   height: 300px;
   font-size: 16px;
@@ -126,7 +142,11 @@ body {
   transition-timing-function: ease;
   overflow-y: auto;
 }
-.html-code-block:focus, .html-code-block:active, .primary-text-editor-block:focus, .primary-text-editor-block:active {
+
+.html-code-block:focus,
+.html-code-block:active,
+.primary-text-editor-block:focus,
+.primary-text-editor-block:active {
   outline: 0;
   border: 3px solid #0092FF;
   box-shadow: 0 0 10px #0092FF;
@@ -143,6 +163,7 @@ body {
   position: relative;
   margin-bottom: 30px;
 }
+
 .primary-text-editor-bg:after {
   content: "";
   display: block;
@@ -180,7 +201,9 @@ body {
   background-color: rgba(255, 249, 247, 0.2);
   backdrop-filter: blur(15px);
 }
-.input-number:focus, .input-number:active {
+
+.input-number:focus,
+.input-number:active {
   outline: 0;
   border: 3px solid #0092FF;
   box-shadow: 0 0 10px #0092FF;
@@ -216,6 +239,7 @@ body {
   -o-transition-timing-function: ease;
   transition-timing-function: ease;
 }
+
 .primary-button:hover {
   /*background: $font-color-primary;*/
   /*color: $primary-blue;*/
@@ -241,6 +265,7 @@ body {
 .primary-text-editor-wrapper {
   margin-bottom: 50px;
 }
+
 .primary-text-editor-wrapper .main-headline {
   margin-right: 140px;
 }
@@ -289,13 +314,15 @@ body {
   backdrop-filter: blur(15px);
 }
 
-.input-name:focus, .input-name:active {
+.input-name:focus,
+.input-name:active {
   outline: 0;
   border: 3px solid #0092FF;
   box-shadow: 0 0 10px #0092FF;
 }
 
-.button-increment, .button-decrement {
+.button-increment,
+.button-decrement {
   cursor: pointer;
   font-size: 18px;
   width: 10px;
@@ -313,7 +340,8 @@ body {
   margin-bottom: auto;
 }
 
-.button-decrement:hover, .button-increment:hover {
+.button-decrement:hover,
+.button-increment:hover {
   color: #3f87ea;
 }
 

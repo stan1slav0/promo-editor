@@ -14,14 +14,14 @@ $medium-blue: #bdcef6;
   padding: 100px 60px;
 }
 
-*{
-  margin:0;
-  padding:0;
+* {
+  margin: 0;
+  padding: 0;
   border: 0;
   vertical-align: baseline;
-  box-sizing:border-box;
-  -moz-box-sizing:border-box;
-  -webkit-box-sizing:border-box;
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
 }
 
 body {
@@ -37,7 +37,7 @@ body {
 }
 
 .limit {
-  background:  url('../image/new-9.png') left top no-repeat, url('../image/new-9.png') right bottom no-repeat;
+  background: url('../image/new-9.png') left top no-repeat, url('../image/new-9.png') right bottom no-repeat;
   animation: circles-move 68s ease infinite;
 }
 
@@ -54,9 +54,11 @@ body {
   30% {
     background-position: 99% 0, 0 99%;
   }
+
   40% {
     background-position: 100% 33%, 33% 100%;
   }
+
   50% {
     background-position: 100% 66%, 66% 100%;
   }
@@ -114,6 +116,7 @@ body {
 .code-blocks-wrapper {
   display: flex;
   justify-content: space-between;
+
   .code-block {
     width: calc(50% - 30px);
   }
@@ -127,7 +130,8 @@ body {
   flex-wrap: wrap;
 }
 
-.html-code-block, .primary-text-editor-block {
+.html-code-block,
+.primary-text-editor-block {
   width: 100%;
   height: 300px;
   font-size: 16px;
@@ -153,7 +157,9 @@ body {
   -o-transition-timing-function: ease;
   transition-timing-function: ease;
   overflow-y: auto;
-  &:focus, &:active {
+
+  &:focus,
+  &:active {
     outline: 0;
     border: 3px solid $primary-blue;
     box-shadow: 0 0 10px $primary-blue;
@@ -171,6 +177,7 @@ body {
 .primary-text-editor-bg {
   position: relative;
   margin-bottom: 30px;
+
   &:after {
     content: '';
     display: block;
@@ -208,7 +215,9 @@ body {
   transition-timing-function: ease;
   background-color: rgba(255, 249, 247, 0.2);
   backdrop-filter: blur(15px);
-  &:focus, &:active {
+
+  &:focus,
+  &:active {
     outline: 0;
     border: 3px solid $primary-blue;
     box-shadow: 0 0 10px $primary-blue;
@@ -244,6 +253,7 @@ body {
   -ms-transition-timing-function: ease;
   -o-transition-timing-function: ease;
   transition-timing-function: ease;
+
   &:hover {
     /*background: $font-color-primary;*/
     /*color: $primary-blue;*/
@@ -269,6 +279,7 @@ body {
 
 .primary-text-editor-wrapper {
   margin-bottom: 50px;
+
   .main-headline {
     margin-right: 140px;
   }
@@ -317,13 +328,16 @@ body {
   background-color: rgba(255, 249, 247, 0.2);
   backdrop-filter: blur(15px);
 }
-.input-name:focus, .input-name:active {
+
+.input-name:focus,
+.input-name:active {
   outline: 0;
   border: 3px solid #0092FF;
   box-shadow: 0 0 10px #0092FF;
 }
 
-.button-increment, .button-decrement {
+.button-increment,
+.button-decrement {
   cursor: pointer;
   font-size: 18px;
   width: 10px;
@@ -341,7 +355,8 @@ body {
   margin-bottom: auto;
 }
 
-.button-decrement:hover, .button-increment:hover {
+.button-decrement:hover,
+.button-increment:hover {
   color: #3f87ea;
 }
 
