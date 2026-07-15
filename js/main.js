@@ -1,3 +1,5 @@
+import { uploadImagesToS3 } from './s3-uploader.js'
+
 function generateDynamicImgSrc(index) {
   const activeCategoryBtn = document.querySelector('.category-wrap__link._active')
 
@@ -1243,65 +1245,102 @@ async function toJpeg600(blob, bgColor = '#ffffff') {
   return { outBlob, targetW, targetH, wasDownscaled }
 }
 
+
+// --- НАСТРОЙКИ ДЛЯ КЛИЕНТА S3 ---
 async function downloadImagesFolder() {
-  logEl.textContent = ''
-  const imgs = Array.from(editor.querySelectorAll('img'))
+  try {
+    logEl.textContent = ''
+    const imgs = Array.from(editor.querySelectorAll('img'))
 
-  // 1. Определяем категорию по активной кнопке
-  const activeCategoryBtn = document.querySelector('.category-wrap__link._active')
-  let categoryText = 'finance'
-  if (activeCategoryBtn) {
-    categoryText = activeCategoryBtn.textContent.trim().toLowerCase()
-  }
-
-  const rawName = document.getElementById('fileName').value || 'PROMO'
-  const promoName = rawName.replace(/\s+/g, '').toUpperCase()
-
-  let index = 1
-  let saved = 0
-
-  for (const img of imgs) {
-    const src = img.getAttribute('src')
-    if (!src) continue
-
-    const blob = await getBlobFromSrc(src)
-    if (!blob) continue
-
-    // Сжатие до 600px
-    const { outBlob } = await toJpeg600(blob, '#ffffff')
-
-    // --- ВШИВАЕМ МЕТАДАННЫЕ ---
-    const blobWithMeta = await injectMetadata(outBlob, categoryText)
-
-    // --- ЧИСТОЕ ИМЯ ФАЙЛА (без префиксов) ---
-    const fileName = `${promoName}_img-${index}.jpg`
-
-    // Скачивание
-    if (typeof saveAs !== 'undefined') {
-      saveAs(blobWithMeta, fileName)
-    } else {
-      const link = document.createElement('a')
-      link.href = URL.createObjectURL(blobWithMeta)
-      link.download = fileName
-      link.click()
-      setTimeout(() => URL.revokeObjectURL(link.href), 1000)
+    if (!imgs.length) {
+      logEl.textContent = "⚠️ No images found for processing.\n"
+      return
     }
 
-    index++
-    saved++
-    await new Promise(r => setTimeout(r, 300))
+    const nameInput = document.getElementById('fileName')
+    if (!nameInput) {
+      logEl.textContent = "❌ Error: HTML element '#fileName' not found.\n"
+      return
+    }
 
-    log(saved)
+    // 1. Определяем категорию по активной кнопке
+    const activeCategoryBtn = document.querySelector('.category-wrap__link._active')
+    let categoryText = 'finance'
+    if (activeCategoryBtn) {
+      categoryText = activeCategoryBtn.textContent.trim().toLowerCase()
+    }
+
+    const rawName = nameInput.value || 'PROMO'
+    const folderName = rawName.trim()
+
+    // Проверяем положение тумблера
+    const toggleEl = document.getElementById('s3UploadToggle')
+    const isS3Enabled = toggleEl ? toggleEl.checked : false
+
+    if (isS3Enabled) {
+      // =========================================================
+      // РЕЖИМ 1: АВТОЗАГРУЗКА ИЗ ВНЕШНЕГО ФАЙЛА S3-UPLOADER.JS
+      // =========================================================
+      await uploadImagesToS3(imgs, categoryText, folderName, activeCategoryBtn, logEl)
+
+    } else {
+      // =========================================================
+      // РЕЖИМ 2: СТАРЫЙ ФУНКЦИОНАЛ (СКАЧИВАНИЕ НА ПК)
+      // =========================================================
+      const promoName = folderName.replace(/\s+/g, '').toUpperCase()
+
+      let index = 1
+      let saved = 0
+
+      for (const img of imgs) {
+        const src = img.getAttribute('src')
+        if (!src) continue
+
+        const blob = await getBlobFromSrc(src)
+        if (!blob) continue
+
+        const { outBlob } = await toJpeg600(blob, '#ffffff')
+        const blobWithMeta = await injectMetadata(outBlob, categoryText)
+        const fileName = `${promoName}_img-${index}.jpg`
+
+        if (typeof saveAs !== 'undefined') {
+          saveAs(blobWithMeta, fileName)
+        } else {
+          const link = document.createElement('a')
+          link.href = URL.createObjectURL(blobWithMeta)
+          link.download = fileName
+          link.click()
+          setTimeout(() => URL.revokeObjectURL(link.href), 1000)
+        }
+
+        index++
+        saved++
+        await new Promise(r => setTimeout(r, 300))
+
+        logEl.textContent = saved
+      }
+
+      logEl.textContent = ''
+      if (imgs.length) return logEl.textContent = `${saved > 1 ? saved + ' images' : saved + ' image'} saved to PC ✅\n`
+    }
+
+  } catch (globalError) {
+    logEl.textContent = `❌ Global Script Error: ${globalError.message}\n${globalError.stack}`
   }
-
-  logEl.textContent = ''
-  if (imgs.length) return log(`${saved > 1 ? saved + ' images' : saved + ' image'} saved ✅`)
-
 }
 
+
+
+
+
+
+
+
+// Привязываем события клика
 document.getElementById('btn-download').addEventListener('click', downloadImagesFolder)
 document.getElementById('mjmlDownloadBtn').addEventListener('click', downloadImagesFolder)
 
+// НАБЛЮДАТЕЛЬ ЗА НАЛИЧИЕМ КАРТИНОК
 editor.addEventListener('paste', (e) => {
   const items = Array.from(e.clipboardData?.items || [])
   const hasFiles = items.some(it => it.kind === 'file')
@@ -1321,7 +1360,7 @@ function updateCategoryVisibility() {
 
   if (count > 0) {
     const word = count === 1 ? 'image' : 'images'
-    log(`${count} ${word} ready to download ✅`)
+    logEl.textContent = `${count} ${word} ready ✅\n`
     categoryModal.classList.add('_show')
   } else {
     categoryModal.classList.remove('_show')
@@ -1334,9 +1373,9 @@ const observer = new MutationObserver(() => {
 
 observer.observe(editor, { childList: true, subtree: true })
 
-
+// ЕДИНЫЙ ОБРАБОТЧИК ДЛЯ СТАРТА СТРАНИЦЫ
 document.addEventListener('DOMContentLoaded', () => {
-  // --- Функция для восстановления категории из Storage ---
+  // Восстановление категории
   const restoreCategory = () => {
     const savedCategory = localStorage.getItem('selectedCategory')
     if (savedCategory) {
@@ -1347,22 +1386,57 @@ document.addEventListener('DOMContentLoaded', () => {
         const parent = targetBtn.closest('.category-wrap')
         const currentActive = parent.querySelector('._active')
         if (currentActive) currentActive.classList.remove('_active')
-
         targetBtn.classList.add('_active')
-
-        // const categoryDisplay = document.querySelector('#category-name')
-        // if (categoryDisplay) categoryDisplay.textContent = targetBtn.textContent.trim()
       }
     }
   }
 
-  // Mini modal
+  // S3 Toggle Initialization and Dynamic Status Text
+  const toggle = document.getElementById('s3UploadToggle')
+  const toggleStatus = document.getElementById('toggleStatus')
+
+  if (toggle && toggleStatus) {
+    const savedToggleState = localStorage.getItem('s3_test_toggle_enabled')
+
+    // Восстанавливаем состояние чекбокса
+    if (savedToggleState === 'true') {
+      toggle.checked = true
+    } else {
+      toggle.checked = false
+    }
+
+    // Функция обновления текстового лейбла
+    const updateToggleLabel = () => {
+      if (toggle.checked) {
+        toggleStatus.textContent = "Storage Upload"
+        toggleStatus.style.color = "#d357d8" // Фиолетовый
+      } else {
+        toggleStatus.textContent = "Download to PC"
+        toggleStatus.style.color = "#75eaf6" // Серый
+      }
+    }
+
+    // Запускаем проверку при загрузке страницы
+    updateToggleLabel()
+
+    // Следим за изменениями
+    toggle.addEventListener('change', () => {
+      localStorage.setItem('s3_test_toggle_enabled', toggle.checked)
+      updateToggleLabel()
+
+      // Выводим информацию в основной лог программы
+      logEl.textContent = toggle.checked
+        ? '☁️ Auto-upload to S3 mode activated!\n'
+        : '💻 Download to local PC mode restored.\n'
+    })
+  }
+
+  // Mini modal клики
   document.querySelectorAll('.mini-modal__btn').forEach(btn => {
     btn.addEventListener('click', function (e) {
       e.preventDefault()
       const parent = btn.closest('.mini-modal')
       const modal = parent.querySelector('.mini-modal__modal')
-
       const isActive = btn.classList.contains('_active')
 
       document.querySelectorAll('.mini-modal__btn').forEach(b => b.classList.remove('_active'))
@@ -1373,7 +1447,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!isActive) {
         btn.classList.add('_active')
         if (modal) modal.classList.add('_active')
-
         if (isTouchDevice()) document.body.style.cursor = 'pointer'
       }
     })
@@ -1382,7 +1455,6 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('click', function (e) {
     if (!e.target.closest('.mini-modal')) {
       document.querySelectorAll('.mini-modal__modal, .mini-modal__btn').forEach(el => el.classList.remove('_active'))
-
       if (isTouchDevice()) document.body.style.cursor = 'default'
     }
   })
@@ -1391,57 +1463,38 @@ document.addEventListener('DOMContentLoaded', () => {
     const btn = event.target.closest('.category-wrap__link')
     if (btn) {
       event.preventDefault()
-
       const parent = btn.closest('.category-wrap')
       const isActive = btn.classList.contains('_active')
 
       if (!isActive) {
-        // Знімаємо активний клас з усіх кнопок у групі
         parent.querySelectorAll('.category-wrap__link').forEach(b => b.classList.remove('_active'))
-
-        // Додаємо активний клас до натиснутої кнопки
         btn.classList.add('_active')
-
-        // Отримуємо текст кнопки та зберігаємо в localStorage
         const btnText = btn.textContent.trim().toLowerCase()
         localStorage.setItem('selectedCategory', btnText)
-
-        console.log("Категорія збережена:", btnText)
-
-        // Якщо потрібно, оновлюємо відображення категорії
-        // const categoryDisplay = document.querySelector('#category-name')
-        // if (categoryDisplay) categoryDisplay.textContent = btn.textContent.trim()
       }
     }
   })
 
   restoreCategory()
-
-  // ENd Mini modal
 })
 
 function isTouchDevice() {
   return 'ontouchstart' in window || navigator.maxTouchPoints
 }
 
+// ВШИВАНИЕ МЕТАДАННЫХ EXIF
 async function injectMetadata(blob, category) {
   return new Promise((resolve) => {
     const reader = new FileReader()
     reader.onloadend = function () {
       const base64Data = reader.result
-
-      // Слой 0th (IFD0) содержит основные теги
       const zeroth = {}
-      // 270 — это стандартный тег ImageDescription (Описание)
       zeroth[piexif.ImageIFD.ImageDescription] = category
 
       const exifObj = { "0th": zeroth, "Exif": {}, "GPS": {} }
       const exifBytes = piexif.dump(exifObj)
-
-      // Вшиваем метаданные в base64
       const newBase64 = piexif.insert(exifBytes, base64Data)
 
-      // Превращаем обратно в Blob для скачивания
       const byteString = atob(newBase64.split(',')[1])
       const mimeString = newBase64.split(',')[0].split(':')[1].split(';')[0]
       const ab = new ArrayBuffer(byteString.length)
@@ -1454,3 +1507,8 @@ async function injectMetadata(blob, category) {
     reader.readAsDataURL(blob)
   })
 }
+
+
+window.getBlobFromSrc = getBlobFromSrc
+window.toJpeg600 = toJpeg600
+window.injectMetadata = injectMetadata
