@@ -1375,6 +1375,12 @@ observer.observe(editor, { childList: true, subtree: true })
 
 // ЕДИНЫЙ ОБРАБОТЧИК ДЛЯ СТАРТА СТРАНИЦЫ
 document.addEventListener('DOMContentLoaded', () => {
+
+  // ВРЕМЕННО: Записываем тестовый ключ лицензии в сторедж, если его там нет
+  if (!localStorage.getItem('license_key')) {
+    localStorage.setItem('license_key', 'epc-admin')
+  }
+
   // Восстановление категории
   const restoreCategory = () => {
     const savedCategory = localStorage.getItem('selectedCategory')
@@ -1391,40 +1397,35 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // S3 Toggle Initialization and Dynamic Status Text
+  // Инициализация тумблера S3
   const toggle = document.getElementById('s3UploadToggle')
   const toggleStatus = document.getElementById('toggleStatus')
 
   if (toggle && toggleStatus) {
     const savedToggleState = localStorage.getItem('s3_test_toggle_enabled')
 
-    // Восстанавливаем состояние чекбокса
     if (savedToggleState === 'true') {
       toggle.checked = true
     } else {
       toggle.checked = false
     }
 
-    // Функция обновления текстового лейбла
     const updateToggleLabel = () => {
       if (toggle.checked) {
         toggleStatus.textContent = "Storage Upload"
-        toggleStatus.style.color = "#d357d8" // Фиолетовый
+        toggleStatus.style.color = "#d357d8"
       } else {
         toggleStatus.textContent = "Download to PC"
-        toggleStatus.style.color = "#75eaf6" // Серый
+        toggleStatus.style.color = "#75eaf6"
       }
     }
 
-    // Запускаем проверку при загрузке страницы
     updateToggleLabel()
 
-    // Следим за изменениями
     toggle.addEventListener('change', () => {
       localStorage.setItem('s3_test_toggle_enabled', toggle.checked)
       updateToggleLabel()
 
-      // Выводим информацию в основной лог программы
       logEl.textContent = toggle.checked
         ? '☁️ Auto-upload to S3 mode activated!\n'
         : '💻 Download to local PC mode restored.\n'
