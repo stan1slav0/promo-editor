@@ -1510,6 +1510,11 @@ async function injectMetadata(blob, category) {
 }
 
 
+window.changeNumber = changeNumber
+window.changeMjmlNumber = changeMjmlNumber
+window.copyTextHtml = copyTextHtml
+window.copyTextMjml = copyTextMjml
+
 window.getBlobFromSrc = getBlobFromSrc
 window.toJpeg600 = toJpeg600
 window.injectMetadata = injectMetadata

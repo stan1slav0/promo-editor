@@ -14,58 +14,62 @@ export async function uploadImagesToS3(imgs, categoryText, folderName, activeCat
   const digits = folderName.replace(/[^0-9]/g, '')
 
   if (!letters || !digits) {
-    logEl.textContent = '❌ S3 Error: Invalid folder format (Requires letters and numbers, e.g., SBJC123)\n'
+    logEl.innerHTML = '❌ S3 Error: Invalid folder format (Requires letters and numbers, e.g., SBJC123)<br>'
     return
   }
 
-  // Показываем только первый статус на старте
-  logEl.textContent = `🚀 S3 Auto-Upload Mode: sending ${imgs.length} image(s)...`
+  const totalCount = imgs.length
+  const totalWord = totalCount === 1 ? 'image' : 'images'
+
+  // Сбрасываем старый лог и пишем стартовый статус
+  logEl.innerHTML = `🚀 S3 Auto-Upload Mode: sending ${totalCount} ${totalWord}...`
 
   let index = 1
   let uploadedCount = 0
   let existsCount = 0
+  let generatedBrowserUrl = ''
 
   for (const img of imgs) {
     const src = img.getAttribute('src')
     if (!src) continue
 
-    // Стираем старый текст и пишем текущий этап обработки
-    logEl.textContent = `[${index}/${imgs.length}] Processing image...`
+    // Информативный статус обработки (чистый текст)
+    logEl.innerHTML = `⚙️ Processing image ${index} of ${totalCount}...`
 
-    // Безопасное получение Blob (функция берется из глобальной области видимости main.js)
+    // Безопасное получение Blob
     if (typeof window.getBlobFromSrc !== 'function') {
-      logEl.textContent = `❌ Error: 'getBlobFromSrc' function is missing in main.js`
+      logEl.innerHTML = `❌ Error: 'getBlobFromSrc' function is missing in main.js`
       break
     }
 
     const blob = await window.getBlobFromSrc(src)
     if (!blob) {
-      logEl.textContent = `❌ [${index}/${imgs.length}] Failed to download source image`
+      logEl.innerHTML = `❌ Failed to download source image ${index}`
       index++
       await new Promise(r => setTimeout(r, 1000))
       continue
     }
 
-    // Сжатие до 600px (функция берется из глобальной области видимости main.js)
+    // Сжатие до 600px
     if (typeof window.toJpeg600 !== 'function') {
-      logEl.textContent = `❌ Error: 'toJpeg600' function is missing`
+      logEl.innerHTML = `❌ Error: 'toJpeg600' function is missing`
       break
     }
     const { outBlob } = await window.toJpeg600(blob, '#ffffff')
 
-    // Вшиваем метаданные (функция берется из глобальной области видимости main.js)
+    // Вшиваем метаданные
     if (typeof window.injectMetadata !== 'function') {
-      logEl.textContent = `❌ Error: 'injectMetadata' function is missing`
+      logEl.innerHTML = `❌ Error: 'injectMetadata' function is missing`
       break
     }
     const blobWithMeta = await window.injectMetadata(outBlob, categoryText)
 
     const fileName = `img-${index}.jpg`
 
-    // Перезаписываем лог на отправку
-    logEl.textContent = `[${index}/${imgs.length}] Uploading ${fileName}...`
+    // Информативный статус отправки (чистый текст)
+    logEl.innerHTML = `📤 Uploading image ${index} of ${totalCount}...`
 
-    // Построение пути S3
+    // --- ПОСТРОЕНИЕ ПУТИ S3 И ССЫЛОК ---
     let apiPath = ''
     let parentParam = 'global'
     const currentCat = categoryText.toLowerCase()
@@ -74,10 +78,12 @@ export async function uploadImagesToS3(imgs, categoryText, folderName, activeCat
       parentParam = 'alpha'
       const formattedName = `${letters}/lift-${digits}`
       apiPath = `promo/${formattedName}/${fileName}`
+      generatedBrowserUrl = `https://storage.epcnetwork.dev/browser/alphaone/promo/${letters}/lift-${digits}/`
     } else if (currentCat === 'organic') {
       parentParam = 'organic'
       const formattedName = `${letters}/creative-${digits}`
       apiPath = `creatives/${formattedName}/${fileName}`
+      generatedBrowserUrl = `https://storage.epcnetwork.dev/browser/organic/creatives/${letters}/creative-${digits}/`
     } else {
       parentParam = 'global'
       const formattedName = `${letters}/lift-${digits}`
@@ -85,6 +91,7 @@ export async function uploadImagesToS3(imgs, categoryText, folderName, activeCat
         ? activeCategoryBtn.textContent.trim().toLowerCase()
         : 'finance'
       apiPath = `Promo/${originCategoryName}/${formattedName}/${fileName}`
+      generatedBrowserUrl = `https://storage.epcnetwork.dev/browser/files/Promo/${encodeURIComponent(originCategoryName)}/${letters}/lift-${digits}/`
     }
 
     const originalApiUrl = `https://public.epcnetwork.dev/upload?parent=${parentParam}&path=${apiPath}`
@@ -106,34 +113,36 @@ export async function uploadImagesToS3(imgs, categoryText, folderName, activeCat
 
       if (!response.ok) {
         if (response.status === 409 || responseText.includes('already exists')) {
-          logEl.textContent = `⚠️ [${index}/${imgs.length}] ${fileName} already exists on server.`
           existsCount++
         } else {
           throw new Error(`Server error: ${response.status}`)
         }
       } else {
-        logEl.textContent = `✅ [${index}/${imgs.length}] Successfully uploaded: ${fileName}`
         uploadedCount++
       }
 
     } catch (err) {
-      logEl.textContent = `❌ [${index}/${imgs.length}] Upload failed for ${fileName}: ${err.message}`
+      logEl.innerHTML = `❌ Image ${index} upload failed: ${err.message}`
+      await new Promise(r => setTimeout(r, 1500)) // задержка только при ошибке, чтобы её успели увидеть
     }
 
     index++
-
-    // Пауза перед обработкой следующего файла
-    await new Promise(r => setTimeout(r, 600))
+    // Небольшая техническая пауза между запросами (0.2 секунды вместо 0.8), так как нам больше не нужно ждать чтения текста на экране
+    await new Promise(r => setTimeout(r, 200))
   }
 
-  // Завершающий этап: выводим строго ОДИН итоговый статус
+  // Окончания для финального статуса
+  const upWord = uploadedCount === 1 ? 'image' : 'images'
+  const exWord = existsCount === 1 ? 'image' : 'images'
+
+  // --- ЗАВЕРШАЮЩИЙ ЭТАП: ЗДЕСЬ ССЫЛКА РЕАЛЬНО НУЖНА ---
   if (uploadedCount > 0 && existsCount === 0) {
-    logEl.textContent = `✅ Successfully uploaded: ${uploadedCount} image(s)!`
+    logEl.innerHTML = `✅ Successfully uploaded ${uploadedCount} ${upWord}! <a href="${generatedBrowserUrl}" target="_blank"  class="output_button_folder">📂 Open S3 Folder</a>`
   } else if (uploadedCount === 0 && existsCount > 0) {
-    logEl.textContent = `⚠️ Already exists on server.`
+    logEl.innerHTML = `⚠️ All ${existsCount} ${exWord} already exist on server. <a href="${generatedBrowserUrl}" target="_blank"  class="output_button_folder">📂 Open S3 Folder</a>`
   } else if (uploadedCount > 0 && existsCount > 0) {
-    logEl.textContent = `✅ Uploaded: ${uploadedCount} | ⚠️ Already exists: ${existsCount}`
+    logEl.innerHTML = `✅ Uploaded: ${uploadedCount} ${upWord} | ⚠️ Already exists: ${existsCount} ${exWord} <a href="${generatedBrowserUrl}" target="_blank"  class="output_button_folder">📂 Open S3 Folder</a>`
   } else {
-    logEl.textContent = `❌ S3 Upload failed.`
+    logEl.innerHTML = `❌ S3 Upload failed.`
   }
 }
